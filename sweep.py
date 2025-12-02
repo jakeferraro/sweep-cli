@@ -4,6 +4,9 @@ Sweep - Filesystem analyzer with Finder tag integration
 
 import sys
 import argparse
+import json
+import tempfile
+import subprocess
 from pathlib import Path
 
 from scanner import scan_filesystem
@@ -11,6 +14,47 @@ from tagger import check_tag_installed, apply_tags, remove_tags, clear_all_sweep
 from output import output_summary, output_json, output_csv
 from config import Config
 from utils import parse_size
+
+
+def serialize_file_entry(entry):
+    """Serialize FileEntry to JSON-compatible dict."""
+    return {
+        'path': str(entry.path),
+        'size': entry.size,
+        'modified': entry.modified.isoformat(),
+        'category': entry.category
+    }
+
+
+def launch_gui(results):
+    """
+    Launch GUI with file results.
+
+    Args:
+        results: List of FileEntry objects
+    """
+    try:
+        # Create temporary JSON file
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w',
+            suffix='.json',
+            delete=False
+        )
+
+        # Serialize results to JSON
+        json.dump([serialize_file_entry(r) for r in results], temp_file)
+        temp_file.close()
+
+        # Launch GUI as subprocess (non-blocking)
+        subprocess.Popen([
+            sys.executable,
+            'file_viewer.py',
+            temp_file.name
+        ])
+
+    except Exception as e:
+        print(f"Warning: Failed to launch GUI: {e}", file=sys.stderr)
+        print("Results are still available via CLI output.", file=sys.stderr)
 
 
 def main():
@@ -36,6 +80,7 @@ def main():
     parser.add_argument('--csv', type=str, help='Output CSV to file')
     parser.add_argument('--format', choices=['json', 'csv', 'summary'], default='summary')
     parser.add_argument('--quiet', action='store_true')
+    parser.add_argument('--no-gui', action='store_true', help='Skip GUI and only show CLI output')
     
     # Utility
     parser.add_argument('--untag', type=str, help='Remove specified tag')
@@ -105,6 +150,10 @@ def main():
             else:
                 print(f"\nTagged {tagged} files with '{config.tag_name}'")
                 print("Open Finder sidebar to review tagged files.")
+
+    # Launch GUI unless --no-gui flag is set
+    if not args.no_gui and results:
+        launch_gui(results)
 
 
 if __name__ ==  "__main__":
