@@ -8,6 +8,7 @@ setup(
     description='Filesystem analyzer with Finder tag integration',
     author='Jake Ferraro',
     url='https://github.com/jakeferraro/sweep-cli',
+    py_modules=['sweep', 'scanner', 'tagger', 'output', 'config', 'utils', 'categories'],
     packages=find_packages(),
     entry_points={
         'console_scripts': [
