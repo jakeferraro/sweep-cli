@@ -4,8 +4,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='sweep-cli',
-    version='1.0.0',
-    description='Filesystem analyzer with native macOS GUI for file management',
+    version='2.0.0',
+    description='Filesystem analyzer with macOS GUI for file management',
     author='Jake Ferraro',
     url='https://github.com/jakeferraro/sweep-cli',
     py_modules=['sweep', 'scanner', 'output', 'config', 'utils', 'categories', 'file_viewer'],
