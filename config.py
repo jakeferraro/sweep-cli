@@ -13,8 +13,5 @@ class Config:
     older_than: Optional[int]
     category_filter: Optional[str]
     exclude: List[Path]
-    tag_name: str
-    no_tag: bool
     limit: Optional[int]
-    dry_run: bool
     quiet: bool
