@@ -1,21 +1,64 @@
 """
-Sweep - Filesystem analyzer with Finder tag integration
+Sweep - Filesystem analyzer with native macOS GUI
 """
 
 import sys
 import argparse
+import json
+import tempfile
+import subprocess
 from pathlib import Path
 
 from scanner import scan_filesystem
-from tagger import check_tag_installed, apply_tags, remove_tags, clear_all_sweep_tags
 from output import output_summary, output_json, output_csv
 from config import Config
 from utils import parse_size
 
 
+def serialize_file_entry(entry):
+    """Serialize FileEntry to JSON-compatible dict."""
+    return {
+        'path': str(entry.path),
+        'size': entry.size,
+        'modified': entry.modified.isoformat(),
+        'category': entry.category
+    }
+
+
+def launch_gui(results):
+    """
+    Launch GUI with file results.
+
+    Args:
+        results: List of FileEntry objects
+    """
+    try:
+        # Create temporary JSON file
+        temp_file = tempfile.NamedTemporaryFile(
+            mode='w',
+            suffix='.json',
+            delete=False
+        )
+
+        # Serialize results to JSON
+        json.dump([serialize_file_entry(r) for r in results], temp_file)
+        temp_file.close()
+
+        # Launch GUI as subprocess (non-blocking)
+        subprocess.Popen([
+            sys.executable,
+            'file_viewer.py',
+            temp_file.name
+        ])
+
+    except Exception as e:
+        print(f"Warning: Failed to launch GUI: {e}", file=sys.stderr)
+        print("Results are still available via CLI output.", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description='Sweep - Tag files for visual review and deletion',
+        description='Sweep - Filesystem analyzer with native macOS GUI',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
@@ -25,44 +68,21 @@ def main():
     parser.add_argument('--category', choices=['archive', 'disk_image', 'video', 'cache', 'log'])
     parser.add_argument('--path', type=str, default=str(Path.home()), help='Directory to scan')
     parser.add_argument('--exclude', type=str, default='/System,/Library,/Applications')
-    
-    # Tagging
-    parser.add_argument('--tag', type=str, default='sweep', help='Tag name to apply')
-    parser.add_argument('--no-tag', action='store_true', help='Skip tagging')
-    parser.add_argument('--clear-existing', action='store_true')
-    
+
     # Output
     parser.add_argument('--json', type=str, help='Output JSON to file')
     parser.add_argument('--csv', type=str, help='Output CSV to file')
     parser.add_argument('--format', choices=['json', 'csv', 'summary'], default='summary')
     parser.add_argument('--quiet', action='store_true')
-    
+    parser.add_argument('--no-gui', action='store_true', help='Skip GUI and only show CLI output')
+
     # Utility
-    parser.add_argument('--untag', type=str, help='Remove specified tag')
-    parser.add_argument('--clear-all-tags', action='store_true')
     parser.add_argument('--limit', type=int, help='Process top N results')
-    parser.add_argument('--dry-run', action='store_true')
-    
+
     # General
     parser.add_argument('--version', action='version', version='sweep 1.0.0')
-    
+
     args = parser.parse_args()
-
-    # Check for tag CLI
-    if not check_tag_installed():
-        print("Error: 'tag' CLI not found. Install with: brew install tag", file=sys.stderr)
-        sys.exit(3)
-
-    # Handle utility commands
-    if args.untag:
-        count = remove_tags(args.untag)
-        print(f"Removed tag '{args.untag}' from {count} files")
-        sys.exit(0)
-
-    if args.clear_all_tags:
-        count = clear_all_sweep_tags()
-        print(f"Removed {count} sweep tags")
-        sys.exit(0)
 
     # Build config
     config = Config(
@@ -71,10 +91,7 @@ def main():
         older_than=args.older_than,
         category_filter=args.category,
         exclude=[Path(p.strip()) for p in args.exclude.split(',')],
-        tag_name=args.tag,
-        no_tag=args.no_tag,
         limit=args.limit,
-        dry_run=args.dry_run,
         quiet=args.quiet
     )
 
@@ -96,15 +113,9 @@ def main():
     else:
         output_summary(results, config)
 
-    # Apply tags
-    if not config.no_tag and results:
-        tagged = apply_tags(results, config.tag_name, config.dry_run)
-        if not config.quiet:
-            if config.dry_run:
-                print(f"\n[DRY RUN] Would tag {tagged} files with '{config.tag_name}'")
-            else:
-                print(f"\nTagged {tagged} files with '{config.tag_name}'")
-                print("Open Finder sidebar to review tagged files.")
+    # Launch GUI unless --no-gui flag is set
+    if not args.no_gui and results:
+        launch_gui(results)
 
 
 if __name__ ==  "__main__":

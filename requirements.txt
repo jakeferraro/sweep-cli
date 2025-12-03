@@ -1,0 +1,4 @@
+# Sweep CLI Requirements
+
+# GUI Framework
+PyQt6>=6.4.0

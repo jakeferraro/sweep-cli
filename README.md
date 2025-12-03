@@ -1,64 +1,71 @@
 # Sweep
 
-Fast, read-only filesystem analyzer that tags files with macOS Finder tags for visual review and manual deletion.
+Fast filesystem analyzer with GUI for reviewing and managing files.
 
 ## Features
 
-- **Read-only**: Never deletes or modifies files
-- **Visual**: Uses Finder tags for easy review
-- **Flexible**: Filter by size, age, and category
-- **Export**: JSON and CSV output formats
+- PyQt6 GUI interface
+- File selection criteria
+- Export results as JSON or CSV 
 
 ## Requirements
 
 - macOS 11+ (Big Sur or later)
 - Python 3.9+
-- `tag` CLI tool: `brew install tag`
+- PyQt6 (for GUI): `pip install PyQt6`
 
 ## Installation
 
 ```bash
 # Clone repository
 git clone git@github.com:jakeferraro/sweep-cli.git
-cd sweep
+cd sweep-cli
 
-# Install
+# Install dependencies
+pip install -r requirements.txt
+
+# Install sweep
 pip install -e .
 
-# Or copy to PATH
+# Or copy to PATH (CLI only, no GUI)
 chmod +x sweep.py
 cp sweep.py /usr/local/bin/sweep
 ```
 
 ## Usage
 
-### Basic Examples
+### GUI Mode (Default)
 
-Find files over 500MB older than 1 year:
+By default, Sweep launches a native macOS GUI after scanning:
+
 ```bash
+# Find files over 500MB - GUI opens automatically
 sweep --min-size 500M --older-than 365d
-```
 
-Find old disk images:
-```bash
+# Find old disk images - review in GUI
 sweep --category disk_image --older-than 180d
-```
 
-Find large video files:
-```bash
+# Find large video files - interactive management
 sweep --category video --min-size 2G
 ```
 
-### Custom Tagging
+**GUI Features:**
+- **Sortable columns**: Click headers to sort by Name, Size, Kind, or Date
+- **Search box**: Filtering by filename
+- **Multi-select**: Cmd+Click or Shift+Click to select multiple files
+- **Double-click**: Open files with default application
+- **Right-click menu**: Open, Show in Finder, Copy Path, Move to Trash
+- **Keyboard shortcuts**:
+  - `Cmd+W` - Close window
+  - `Cmd+F` - Focus search
+  - `Delete/Backspace` - Move selected files to trash
 
-Use custom tag name:
-```bash
-sweep --min-size 1G --tag "LargeFiles2024"
-```
+### CLI-Only Mode
 
-Tag without terminal output:
+Use `--no-gui` to skip the GUI and use CLI output only:
+
 ```bash
-sweep --min-size 500M --older-than 730d --quiet
+sweep --min-size 500M --older-than 365d --no-gui
 ```
 
 ### Data Export
@@ -70,26 +77,7 @@ sweep --min-size 100M --json results.json
 
 Generate CSV for Excel:
 ```bash
-sweep --older-than 365d --csv report.csv --no-tag
-```
-
-### Cleanup
-
-Remove tags after review:
-```bash
-sweep --untag "sweep"
-```
-
-Remove all sweep tags:
-```bash
-sweep --clear-all-tags
-```
-
-### Dry Run
-
-Preview what would be tagged:
-```bash
-sweep --min-size 1G --older-than 365d --dry-run
+sweep --older-than 365d --csv report.csv
 ```
 
 ## Command-Line Options
@@ -101,22 +89,15 @@ sweep --min-size 1G --older-than 365d --dry-run
 - `--path <directory>` - Start scan from directory (default: ~)
 - `--exclude <dirs>` - Comma-separated dirs to skip
 
-### Tagging
-- `--tag <name>` - Tag name to apply (default: "sweep")
-- `--no-tag` - Skip tagging, only output data
-- `--clear-existing` - Remove existing tags before applying new ones
-
 ### Output
 - `--json <file>` - Output results as JSON
 - `--csv <file>` - Output results as CSV
 - `--format <type>` - Output format: json, csv, summary (default: summary)
 - `--quiet` - Suppress terminal output except errors
+- `--no-gui` - Skip GUI and use CLI output only
 
 ### Utility
-- `--untag <name>` - Remove specified tag from all files
-- `--clear-all-tags` - Remove all "sweep*" tags from filesystem
 - `--limit <n>` - Only process top N results (by size)
-- `--dry-run` - Show what would be tagged without tagging
 
 ### General
 - `--version` - Show version
