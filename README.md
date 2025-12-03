@@ -1,15 +1,12 @@
 # Sweep
 
-Fast filesystem analyzer with native macOS GUI for reviewing and managing files.
+Fast filesystem analyzer with GUI for reviewing and managing files.
 
 ## Features
 
-- **GUI Interface**: Native PyQt6 interface for visual file management
-- **Interactive**: Sort, search, and filter files in real-time
-- **Safe Operations**: Move to trash (reversible), never permanent delete
-- **Finder Integration**: Open files, show in Finder, reveal locations
-- **Flexible**: Filter by size, age, and category
-- **Export**: JSON and CSV output formats
+- PyQt6 GUI interface
+- File selection criteria
+- Export results as JSON or CSV 
 
 ## Requirements
 
@@ -54,7 +51,7 @@ sweep --category video --min-size 2G
 
 **GUI Features:**
 - **Sortable columns**: Click headers to sort by Name, Size, Kind, or Date
-- **Search box**: Real-time filtering by filename
+- **Search box**: Filtering by filename
 - **Multi-select**: Cmd+Click or Shift+Click to select multiple files
 - **Double-click**: Open files with default application
 - **Right-click menu**: Open, Show in Finder, Copy Path, Move to Trash
@@ -62,7 +59,6 @@ sweep --category video --min-size 2G
   - `Cmd+W` - Close window
   - `Cmd+F` - Focus search
   - `Delete/Backspace` - Move selected files to trash
-- **Move to Trash**: Safe, reversible file removal (not permanent delete)
 
 ### CLI-Only Mode
 
